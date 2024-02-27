@@ -9,6 +9,7 @@ import SwiftUI
 
 struct Page2View: View {
     @Binding var text3: String
+    @State var response: ChatGptResponse?
     
     @StateObject private var viewModel = Page2ViewModel()
     
@@ -18,21 +19,26 @@ struct Page2View: View {
                 .imageScale(.large)
                 .foregroundStyle(.tint)
             Text("Received from Page 1 \(text3)")
+            Text(response?.message ?? "Not found")
+                .bold()
+                .font(.title3)
         }
         .padding()
         .task {
-            await viewModel.fetchUser()
+            do {
+                response = try await viewModel.getChatGptResponse()
+            } catch {
+                print("Error fetching user:", error)
+            }
         }
     }
 }
 
-
-struct GitHubUser: Codable {
-    let login: String
-    let avatarUrl: String
+struct ChatGptResponse: Codable {
+    let message: String
 }
 
-enum GHError: Error {
+enum ChatGptError: Error {
     case invalidURL
     case invalidResponse
     case invalidData
