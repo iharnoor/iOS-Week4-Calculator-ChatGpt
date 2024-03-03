@@ -2,32 +2,41 @@
 //  Page2ViewModel.swift
 //  calculator
 //
-//  Created by Harnoor Singh on 2/24/24.
+//  Created by Harnoor Singh on 3/3/24.
 //
 
 import Foundation
-import SwiftUI
 
 class Page2ViewModel: ObservableObject {
-    @Published var user: ChatGptResponse?
     
-    func getChatGptResponse() async throws -> ChatGptResponse { // many things can go wrong}
-        let endpoint =  "https://raw.githubusercontent.com/iharnoor/iOS-Week4-Calculator-ChatGpt/main/server.json"
-        
-        guard let url = URL(string:endpoint) else { throw ChatGptError.invalidURL }
-        
-        let (data, response) = try await URLSession.shared.data(from: url)
-        
-        guard let response = response as? HTTPURLResponse, response.statusCode == 200 else {
-            throw ChatGptError.invalidResponse
+    
+    // convert this to a viewmodel MVVM structure
+    func getResponseFromServer(textFromPage1: String) async throws -> ChatGptResponse {
+        let endPoint = "https://chatgptvm.eastus.cloudapp.azure.com/api/chatgpt/\(textFromPage1)"
+        guard let url = URL(string: endPoint) else {
+            throw ChatGptError.URLError
         }
-        
-        do {
-            let decoder = JSONDecoder()
-            decoder.keyDecodingStrategy = .convertFromSnakeCase
-            return try decoder.decode(ChatGptResponse.self, from: data)
-        } catch {
-            throw ChatGptError.invalidData
+        let (data, response) =  try await URLSession.shared.data(from: url) // type -> 2
+        guard
+            let response = response as? HTTPURLResponse,
+            response.statusCode >= 200 && response.statusCode < 300
+        else {
+            // todo
+            throw ChatGptError.ResponseError
         }
+        let decoder = JSONDecoder()
+        let chatGptResponse = try decoder.decode(ChatGptResponse.self, from: data)
+        
+        return chatGptResponse
     }
 }
+
+enum ChatGptError: Error {
+    case ResponseError
+    case URLError
+}
+
+struct ChatGptResponse: Codable { // conforms to a protocol Codable
+    var message: String
+}
+

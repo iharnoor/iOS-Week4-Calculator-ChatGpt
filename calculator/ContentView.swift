@@ -20,7 +20,7 @@ struct ContentView: View {
                     .padding()
                     .buttonStyle(.bordered)
                     .border(.secondary)
-                NavigationLink(destination: Page2View(text3: $text2)) {
+                NavigationLink(destination: Page2View(textFromPage1: $text2)) {
                     Label("Go to Page 2", systemImage: "timer")
                         .font(.headline)
                         .foregroundColor(.accentColor)
